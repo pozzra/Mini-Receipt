@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="km">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Mini Receipt Canvas Studio</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&family=Nokora:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            font-family: 'Nokora', 'Kantumruy Pro', sans-serif;
+            background:
+                radial-gradient(900px 500px at 100% -10%, rgba(37, 99, 235, 0.12), transparent 60%),
+                #0f172a;
+            color: #f8fafc;
+        }
+
+        .khmer-moul {
+            font-family: 'Moul', 'Nokora', cursive;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.72);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            border-radius: 1rem;
+            box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: #94a3b8;
+        }
+
+        .input {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            border-radius: 0.6rem;
+            border: 1px solid #334155;
+            background: #0f172a;
+            padding: 0.52rem 0.7rem;
+            font-size: 0.8rem;
+            line-height: 1.35;
+            color: #f8fafc;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .input-sm {
+            padding: 0.42rem 0.55rem;
+            font-size: 0.76rem;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+        }
+
+        .input::placeholder {
+            color: #64748b;
+        }
+
+        select.input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.65rem center;
+            background-size: 12px;
+            padding-right: 2rem;
+        }
+
+        textarea.input {
+            resize: vertical;
+            min-height: 3.25rem;
+        }
+
+        #receiptForm,
+        #receiptForm .grid > * {
+            min-width: 0;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 3.5rem 5.5rem 2rem;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .item-cell {
+            min-width: 0;
+        }
+
+        .item-mini-label {
+            display: none;
+        }
+
+        .items-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 3.5rem 5.5rem 2rem;
+            gap: 0.5rem;
+            padding: 0 0.2rem;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .mobile-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            border-radius: 0.8rem;
+            padding: 0.45rem 0.25rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+        }
+
+        .mobile-nav-btn.is-active {
+            color: #60a5fa;
+            background: rgba(37, 99, 235, 0.14);
+        }
+
+        .mobile-nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        @media (max-width: 1023px) {
+            body[data-mobile-tab="edit"] #previewPanel {
+                display: none;
+            }
+
+            body[data-mobile-tab="preview"] #receiptForm {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .input,
+            .input-sm,
+            textarea.input {
+                font-size: 16px;
+                min-height: 42px;
+            }
+
+            .field-label {
+                font-size: 0.72rem;
+            }
+
+            .items-head {
+                display: none;
+            }
+
+            .item-row {
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.25rem;
+                grid-template-areas:
+                    "name name remove"
+                    "qty price remove";
+                gap: 0.4rem 0.5rem;
+                padding: 0.55rem;
+                border: 1px solid #263449;
+                border-radius: 0.75rem;
+                background: rgba(15, 23, 42, 0.45);
+            }
+
+            .item-name {
+                grid-area: name;
+            }
+
+            .item-qty {
+                grid-area: qty;
+            }
+
+            .item-price {
+                grid-area: price;
+            }
+
+            .item-row [data-remove] {
+                grid-area: remove;
+                align-self: stretch;
+                height: auto;
+            }
+
+            .item-mini-label {
+                display: block;
+                margin-bottom: 0.2rem;
+                font-size: 0.6rem;
+                font-weight: 600;
+                color: #64748b;
+            }
+
+            .mobile-nav-spacer {
+                height: calc(4.6rem + env(safe-area-inset-bottom));
+            }
+
+            #addItemBtn {
+                min-height: 2.75rem;
+            }
+
+            #closePrintSheetBtn {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+        }
+
+        @media (max-width: 375px) {
+            #receiptForm .grid-cols-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .print-sheet-panel {
+            overscroll-behavior: contain;
+            max-width: 100vw;
+            max-height: 92vh;
+            max-height: 92dvh;
+            overflow-x: hidden;
+            padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+        }
+
+        .print-sheet-panel .grid > * {
+            min-width: 0;
+        }
+
+        #printerStatus,
+        #printerDeviceName,
+        #printerHint {
+            overflow-wrap: anywhere;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            width: 2rem;
+            height: 2rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.55rem;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            transition: all 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+        }
+
+        .preview-stage {
+            background-color: #101b31;
+            background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.17) 1px, transparent 0);
+            background-size: 18px 18px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        #receiptCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 24px 55px -20px rgba(0, 0, 0, 0.75);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col" data-mobile-tab="edit">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 static lg:sticky lg:top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 md:gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-950/40">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-white leading-none">Mini Receipt Canvas Studio</h1>
+                    <p class="hidden sm:block text-xs text-slate-400 mt-1">Live Mini &amp; Standard Invoice Generator (Khmer Laundry)</p>
+                </div>
+            </div>
+
+            <div class="flex w-full items-center gap-2 lg:w-auto">
+                <!-- Layout Mode Toggle -->
+                <select id="canvasMode" onchange="toggleCanvasMode()"
+                    class="flex-1 min-w-0 lg:flex-none bg-slate-800 text-slate-200 border border-slate-700 rounded-lg text-xs px-3 py-2 md:py-1.5 focus:outline-none focus:border-blue-500">
+                    <option value="mini80">ក្រដាសកម្ដៅតូច (80mm Thermal)</option>
+                    <option value="mini58">ក្រដាសកម្ដៅតូច (58mm Thermal)</option>
+                    <option value="standard" selected>Standard Voucher (1200x680)</option>
+                </select>
+
+                <div class="hidden lg:flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="fillSampleData()"
+                        class="px-3 py-1.5 text-xs font-semibold text-blue-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                        Sample Data
+                    </button>
+                    <button type="button" onclick="resetToDefaults()"
+                        class="px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition">
+                        Reset
+                    </button>
+                    <button type="button" onclick="downloadCanvas('png')"
+                        class="px-4 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download Image
+                    </button>
+                    <button type="button" onclick="openPrintSheet()"
+                        class="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
+                        </svg>
+                        បោះពុម្ព (Print)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl mx-auto px-4 pt-4 pb-28 lg:py-6 flex-1 grid grid-cols-1 lg:grid-cols-[410px_minmax(0,1fr)] gap-6 items-start">
+
+        <!-- Editor -->
+        <form id="receiptForm" class="space-y-4" autocomplete="off">
+            <!-- Shop -->
+            <section class="panel p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span> ព័ត៌មានហាង
+                    </h2>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-500">Shop</span>
+                </div>
+
+                <div>
+                    <label for="shopName" class="field-label">ឈ្មោះហាង</label>
+                    <input id="shopName" class="input" type="text" placeholder="ឈ្មោះហាងរបស់អ្នក">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="shopPhone" class="field-label">លេខទូរស័ព្ទ</label>
+                        <input id="shopPhone" class="input" type="text" inputmode="tel" placeholder="012 345 678">
+                    </div>
+                    <div>
+                        <label for="invoiceNo" class="field-label">លេខវិក្កយបត្រ</label>
+                        <input id="invoiceNo" class="input" type="text" placeholder="INV-1001">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="shopAddress" class="field-label">អាសយដ្ឋាន</label>
+                    <input id="shopAddress" class="input" type="text" placeholder="ភ្នំពេញ, កម្ពុជា">
+                </div>
+            </section>
+
+            <!-- Invoice / Customer -->
+            <section class="panel p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-sky-400 rounded-full"></span> វិក្កយបត្រ
+                    </h2>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-500">Invoice</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="invoiceDate" class="field-label">កាលបរិច្ឆេទ</label>
+                        <input id="invoiceDate" class="input" type="date">
+                    </div>
+                    <div>
+                        <label for="payment" class="field-label">ការទូទាត់</label>
+                        <select id="payment" class="input">
+                            <option value="សាច់ប្រាក់ (Cash)">សាច់ប្រាក់ (Cash)</option>
+                            <option value="ABA Pay">ABA Pay</option>
+                            <option value="Wing">Wing</option>
+                            <option value="ACLEDA">ACLEDA</option>
+                            <option value="ផ្ទេរតាមធនាគារ">ផ្ទេរតាមធនាគារ</option>
+                            <option value="ផ្សេងៗ">ផ្សេងៗ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="customerName" class="field-label">អតិថិជន</label>
+                        <input id="customerName" class="input" type="text" placeholder="ឈ្មោះអតិថិជន">
+                    </div>
+                    <div>
+                        <label for="customerPhone" class="field-label">លេខទូរស័ព្ទ</label>
+                        <input id="customerPhone" class="input" type="text" inputmode="tel" placeholder="098 765 432">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="status" class="field-label">ស្ថានភាពទូទាត់</label>
+                    <select id="status" class="input">
+                        <option value="paid">បានបង់ប្រាក់ (Paid)</option>
+                        <option value="unpaid">មិនទាន់បង់ប្រាក់ (Unpaid)</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Items -->
+            <section class="panel p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-emerald-400 rounded-full"></span> ទំនិញ / សេវា
+                    </h2>
+                    <span id="itemCount" class="text-[10px] font-semibold text-emerald-400/90">0 ទំនិញ</span>
+                </div>
+
+                <div class="items-head" aria-hidden="true">
+                    <span>សេវា</span>
+                    <span class="text-center">ចំនួន</span>
+                    <span class="text-right">តម្លៃ</span>
+                    <span></span>
+                </div>
+
+                <div id="itemsList" class="space-y-2"></div>
+
+                <button type="button" id="addItemBtn"
+                    class="w-full rounded-lg border border-dashed border-slate-600 py-2 text-xs font-semibold text-slate-300 transition hover:border-blue-500 hover:bg-blue-500/10 hover:text-blue-300">
+                    + បន្ថែមទំនិញ
+                </button>
+            </section>
+
+            <!-- Totals & footer -->
+            <section class="panel p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-amber-400 rounded-full"></span> សរុប និងកំណត់សម្គាល់
+                    </h2>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-500">Totals</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label for="discount" class="field-label">បញ្ចុះតម្លៃ %</label>
+                        <input id="discount" class="input input-sm text-center" type="number" min="0" max="100"
+                            step="0.5" value="0">
+                    </div>
+                    <div>
+                        <label for="tax" class="field-label">ពន្ធ %</label>
+                        <input id="tax" class="input input-sm text-center" type="number" min="0" max="100" step="0.5"
+                            value="0">
+                    </div>
+                    <div>
+                        <label for="delivery" class="field-label">ដឹកជញ្ជូន $</label>
+                        <input id="delivery" class="input input-sm text-center" type="number" min="0" step="0.5"
+                            value="0">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="note" class="field-label">កំណត់សម្គាល់</label>
+                    <textarea id="note" class="input" rows="2" placeholder="ឧ. សូមមកយកនៅម៉ោង 5:00 ល្ងាច"></textarea>
+                </div>
+
+                <div>
+                    <label for="footerNote" class="field-label">សារអរគុណ</label>
+                    <input id="footerNote" class="input" type="text" placeholder="សូមអរគុណ! Thank you.">
+                </div>
+            </section>
+
+            <!-- Mobile-only quick actions -->
+            <div class="lg:hidden grid grid-cols-2 gap-2">
+                <button type="button" onclick="fillSampleData()"
+                    class="rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-xs font-semibold text-blue-300 transition active:scale-[0.98]">
+                    Sample Data
+                </button>
+                <button type="button" onclick="resetToDefaults()"
+                    class="rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-xs font-semibold text-slate-300 transition active:scale-[0.98]">
+                    Reset
+                </button>
+            </div>
+        </form>
+
+        <!-- Preview -->
+        <section id="previewPanel" class="lg:sticky lg:top-32 xl:top-24 space-y-3 min-w-0">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <h2 class="text-sm font-bold text-white">មើលជាមុន (Live Preview)</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        <span id="modeName">Standard Voucher</span>
+                        <span class="text-slate-600">·</span>
+                        <span id="canvasSize">1200 × 680 px</span>
+                    </p>
+                </div>
+                <span
+                    class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+                </span>
+            </div>
+
+            <div class="preview-stage rounded-2xl border border-slate-700/70 p-4 sm:p-6 overflow-auto">
+                <canvas id="receiptCanvas" width="1200" height="680"></canvas>
+            </div>
+
+            <p class="text-[11px] leading-relaxed text-slate-500">
+                គន្លឹះ៖ ប្តូរទម្រង់ទៅ 80mm ឬ 58mm សម្រាប់ម៉ាស៊ីនព្រីនកម្ដៅ។
+                រូបភាព Download និង Print ត្រូវបានបង្កើតចេញពី Canvas ដោយផ្ទាល់។
+            </p>
+        </section>
+    </main>
+
+    <footer class="hidden lg:block border-t border-slate-800/80 py-4 text-center text-[11px] text-slate-500">
+        Mini Receipt Canvas Studio · Khmer Laundry Invoice Generator
+    </footer>
+
+    <!-- Mobile bottom navigation -->
+    <nav class="lg:hidden fixed inset-x-0 bottom-0 z-50 border-t border-slate-800 bg-slate-900/95 backdrop-blur"
+        aria-label="Mobile navigation">
+        <div
+            class="mx-auto grid max-w-md grid-cols-3 gap-1 px-2 pt-1.5 pb-[max(0.4rem,env(safe-area-inset-bottom))]">
+            <button type="button" data-mobile-tab-target="edit" class="mobile-nav-btn is-active"
+                aria-selected="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                    </path>
+                </svg>
+                <span>កែប្រែ</span>
+            </button>
+            <button type="button" data-mobile-tab-target="preview" class="mobile-nav-btn" aria-selected="false">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                <span>មើលជាមុន</span>
+            </button>
+            <button type="button" onclick="openPrintSheet()" class="mobile-nav-btn">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                    </path>
+                </svg>
+                <span>បោះពុម្ព</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Print / Bluetooth printer sheet -->
+    <div id="printSheet" class="fixed inset-0 z-[100] hidden" aria-hidden="true">
+        <div id="printSheetBackdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div id="printSheetWrapper" class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4">
+            <div class="print-sheet-panel relative mx-auto w-full overflow-y-auto rounded-t-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl sm:max-w-lg sm:rounded-2xl"
+                role="dialog" aria-modal="true" aria-labelledby="printSheetTitle">
+                <div class="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-700 sm:hidden"></div>
+
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <h2 id="printSheetTitle" class="text-base font-bold text-white">បោះពុម្ពវិក្កយបត្រ</h2>
+                        <p class="mt-0.5 text-xs text-slate-400">Bluetooth thermal printer ឬប្រព័ន្ធព្រីនរបស់ទូរស័ព្ទ</p>
+                    </div>
+                    <button type="button" id="closePrintSheetBtn" class="icon-btn shrink-0" aria-label="បិទ">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mt-4 space-y-2 rounded-xl border border-slate-700 bg-slate-950/50 p-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex min-w-0 items-start gap-2.5">
+                            <span id="printerStatusDot"
+                                class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-slate-500"></span>
+                            <div class="min-w-0">
+                                <p id="printerStatus" class="text-xs font-semibold text-slate-200"
+                                    aria-live="polite">មិនទាន់ភ្ជាប់ព្រីន</p>
+                                <p id="printerDeviceName" class="mt-0.5 truncate text-[10px] text-slate-500"></p>
+                            </div>
+                        </div>
+                        <select id="btPaper" class="input input-sm !w-auto shrink-0" aria-label="ទំហំក្រដាស">
+                            <option value="80">80mm</option>
+                            <option value="58">58mm</option>
+                        </select>
+                    </div>
+
+                    <div id="printerProgressWrap" class="hidden space-y-1">
+                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-700">
+                            <div id="printerProgressBar"
+                                class="h-full w-0 rounded-full bg-blue-500 transition-all duration-150"></div>
+                        </div>
+                        <p id="printerProgressText" class="text-[10px] text-slate-400"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="connectPrinterBtn"
+                            class="col-span-2 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-white shadow transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40">
+                            ភ្ជាប់ព្រីន
+                        </button>
+                        <button type="button" id="disconnectPrinterBtn"
+                            class="hidden col-span-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:opacity-40">
+                            ផ្តាច់ព្រីន
+                        </button>
+                        <button type="button" id="bluetoothPrintBtn" disabled
+                            class="col-span-2 rounded-lg bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40">
+                            Print via Bluetooth
+                        </button>
+                    </div>
+
+                    <p id="printerHint" class="text-[10px] leading-relaxed text-slate-500">
+                        ព្រីនដែលភ្ជាប់រួចនឹងត្រូវចងចាំសម្រាប់ការភ្ជាប់លើកក្រោយ។
+                    </p>
+                </div>
+
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                    <button type="button" onclick="printCanvas()"
+                        class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-700">
+                        System Print / AirPrint
+                    </button>
+                    <button type="button" onclick="downloadCanvas('png')"
+                        class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-700">
+                        Download PNG
+                    </button>
+                </div>
+
+                <details class="mt-4 rounded-lg border border-slate-800 bg-slate-950/40 p-3 text-[11px] text-slate-400">
+                    <summary class="cursor-pointer font-semibold text-slate-300">របៀបភ្ជាប់ព្រីនលើទូរស័ព្ទ</summary>
+                    <ol class="mt-2 list-decimal space-y-1 pl-4 leading-relaxed">
+                        <li>ប្រើ Android Chrome ឬ Edge ហើយបើកគេហទំព័រតាម <span class="text-slate-200">https://</span>។</li>
+                        <li>បើក Bluetooth លើទូរស័ព្ទ និងព្រីនកម្ដៅ។</li>
+                        <li>ចុច “ភ្ជាប់ព្រីន” រួចជ្រើសឈ្មោះព្រីនក្នុងបញ្ជីរបស់ browser។</li>
+                        <li>ជ្រើស 80mm ឬ 58mm ឱ្យត្រូវនឹងក្រដាស រួចចុច “Print via Bluetooth”។</li>
+                        <li>ព្រីនដែលភ្ជាប់រួចនឹងត្រូវចងចាំ — ពេលបើកម្ដងទៀត វានឹងព្យាយាមភ្ជាប់ស្វ័យប្រវត្តិ។ បើមិនភ្ជាប់ សូមចុច “ភ្ជាប់ព្រីន” ម្ដង។</li>
+                    </ol>
+                    <p class="mt-2 leading-relaxed">
+                        iPhone/iPad មិនគាំទ្រ Web Bluetooth ទេ — សូមប្រើ “System Print / AirPrint” ជំនួស។
+                        ព្រីនខ្លះប្រើ Classic Bluetooth ដែល browser មិនអាចភ្ជាប់ដោយផ្ទាល់បាន។
+                    </p>
+                    <div class="mt-3 border-t border-slate-800 pt-3">
+                        <label for="btServiceUuid" class="field-label">Custom Service UUID (បើព្រីនមិនបង្ហាញ)</label>
+                        <input id="btServiceUuid" class="input input-sm" type="text"
+                            placeholder="0000ff00-0000-1000-8000-00805f9b34fb" autocomplete="off">
+                        <p class="mt-1 text-[10px] text-slate-500">សម្រាប់តែព្រីនដែលប្រើ service UUID ពិសេស។</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=20261028-2"></script>
+</body>
+
+</html>
