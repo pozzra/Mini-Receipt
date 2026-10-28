@@ -857,7 +857,7 @@ function serveStatic(req, res, pathname) {
   res.end(data);
 }
 
-const server = http.createServer(async (req, res) => {
+async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'http://localhost');
     const pathname = url.pathname;
@@ -881,11 +881,17 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) sendJson(res, 500, { error: String(error && error.message || error) });
     else res.end();
   }
-});
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`Mini Receipt admin server listening on http://${HOST}:${PORT}`);
-});
+const server = http.createServer(handler);
+
+if (require.main === module) {
+  server.listen(PORT, HOST, () => {
+    console.log(`Mini Receipt admin server listening on http://${HOST}:${PORT}`);
+  });
+}
 
 process.on('SIGTERM', () => server.close(() => process.exit(0)));
 process.on('SIGINT', () => server.close(() => process.exit(0)));
+
+module.exports = { handler };
